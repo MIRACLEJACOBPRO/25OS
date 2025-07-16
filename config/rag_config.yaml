@@ -1,0 +1,218 @@
+# RAG服务配置文件
+# 检索增强生成 (Retrieval-Augmented Generation) 配置
+
+# Pinecone向量数据库配置
+pinecone:
+  # API密钥 (从环境变量获取)
+  api_key: ${PINECONE_API_KEY}
+  
+  # 索引配置
+  index_name: "b25os-knowledge-base"
+  dimension: 1024
+  metric: "cosine"
+  
+  # 服务器配置
+  cloud: "aws"
+  region: "us-east-1"
+  
+  # 性能配置
+  batch_size: 100
+  max_retries: 3
+  timeout: 30
+  
+  # 缓存配置
+  cache_enabled: true
+  cache_max_size: 1000
+  cache_ttl: 3600  # 1小时
+
+# OpenAI嵌入模型配置
+openai:
+  # API密钥 (从环境变量获取)
+  api_key: ${OPENAI_API_KEY}
+  
+  # 嵌入模型配置
+  embedding_model: "text-embedding-3-large"
+  embedding_dimensions: 1024
+  
+  # API配置
+  max_retries: 3
+  timeout: 30
+  base_url: null  # 使用默认URL
+  
+  # 速率限制
+  requests_per_minute: 3000
+  tokens_per_minute: 1000000
+
+# RAG服务配置
+rag:
+  # 检索配置
+  retrieval:
+    default_top_k: 5
+    max_top_k: 20
+    similarity_threshold: 0.7
+    context_window: 4000  # 上下文窗口大小
+    
+  # 知识融合配置
+  fusion:
+    max_knowledge_items: 10
+    relevance_weight: 0.7
+    diversity_weight: 0.3
+    type_preference:
+      security_rule: 1.0
+      threat_pattern: 0.9
+      incident_case: 0.8
+      remediation_guide: 0.85
+      best_practice: 0.7
+      vulnerability_info: 0.9
+  
+  # 缓存配置
+  cache:
+    enabled: true
+    max_size: 500
+    ttl: 1800  # 30分钟
+    cleanup_interval: 300  # 5分钟清理一次
+  
+  # 统计配置
+  statistics:
+    enabled: true
+    retention_days: 30
+    metrics_interval: 60  # 1分钟更新一次
+
+# 知识管理配置
+knowledge_management:
+  # 导入配置
+  import:
+    supported_formats: ["json", "csv", "txt", "markdown"]
+    max_file_size: 10485760  # 10MB
+    batch_size: 50
+    validation_level: "moderate"  # none, moderate, strict
+    auto_generate_id: true
+    
+  # 导出配置
+  export:
+    default_format: "json"
+    max_items_per_export: 1000
+    include_metadata: true
+    
+  # 知识模板配置
+  templates:
+    security_rule:
+      required_fields: ["title", "content", "severity"]
+      optional_fields: ["category", "tags", "references"]
+      
+    threat_pattern:
+      required_fields: ["title", "content", "threat_type"]
+      optional_fields: ["confidence", "tags", "indicators"]
+      
+    incident_case:
+      required_fields: ["title", "content", "impact"]
+      optional_fields: ["industry", "timeline", "lessons_learned"]
+      
+    remediation_guide:
+      required_fields: ["title", "content", "difficulty"]
+      optional_fields: ["time_required", "tools_needed", "prerequisites"]
+      
+    vulnerability_info:
+      required_fields: ["title", "content", "cvss_score"]
+      optional_fields: ["cve_id", "affected_versions", "patch_info"]
+
+# 日志配置
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # 文件日志
+  file:
+    enabled: true
+    path: "logs/rag_service.log"
+    max_size: 10485760  # 10MB
+    backup_count: 5
+    
+  # 控制台日志
+  console:
+    enabled: true
+    level: "INFO"
+    
+  # 特定模块日志级别
+  loggers:
+    pinecone_service: "INFO"
+    rag_service: "INFO"
+    knowledge_manager: "INFO"
+    openai: "WARNING"
+
+# 性能监控配置
+monitoring:
+  # 指标收集
+  metrics:
+    enabled: true
+    collection_interval: 60  # 秒
+    retention_period: 86400  # 24小时
+    
+  # 性能阈值
+  thresholds:
+    embedding_time_ms: 1000
+    search_time_ms: 500
+    enhancement_time_ms: 2000
+    cache_hit_rate: 0.8
+    
+  # 告警配置
+  alerts:
+    enabled: true
+    email_notifications: false
+    webhook_url: null
+
+# 安全配置
+security:
+  # API密钥管理
+  api_keys:
+    rotation_enabled: false
+    rotation_interval_days: 90
+    
+  # 数据保护
+  data_protection:
+    encrypt_sensitive_data: true
+    mask_personal_info: true
+    audit_log_enabled: true
+    
+  # 访问控制
+  access_control:
+    rate_limiting: true
+    ip_whitelist: []
+    require_authentication: false
+
+# 开发和调试配置
+development:
+  # 调试模式
+  debug_mode: false
+  verbose_logging: false
+  
+  # 测试配置
+  test_mode: false
+  mock_external_services: false
+  
+  # 性能分析
+  profiling_enabled: false
+  trace_requests: false
+
+# 环境特定配置
+environment:
+  # 当前环境 (development, staging, production)
+  name: "development"
+  
+  # 环境特定覆盖
+  overrides:
+    development:
+      logging.level: "DEBUG"
+      rag.cache.ttl: 300  # 5分钟缓存
+      monitoring.metrics.enabled: false
+      
+    staging:
+      logging.level: "INFO"
+      rag.cache.ttl: 1800  # 30分钟缓存
+      monitoring.metrics.enabled: true
+      
+    production:
+      logging.level: "WARNING"
+      rag.cache.ttl: 3600  # 1小时缓存
+      monitoring.metrics.enabled: true
+      security.data_protection.audit_log_enabled: true

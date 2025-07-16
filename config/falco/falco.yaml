@@ -1,0 +1,251 @@
+#
+# Copyright (C) 2023 The Falco Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# NeuronOS Custom Falco Configuration
+# 针对NeuronOS项目的自定义Falco配置
+
+# File(s) or Directories containing Falco rules, loaded at startup.
+# The name "rules_files" is the new plural form.
+# If the entry is a file, it will be read directly. If the entry is a directory,
+# every file in that directory will be read, in alphabetical order.
+#
+# falco_rules.yaml ships with the falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created
+# if it doesn't exist. If you want to customize the set of rules, add
+# your customizations to falco_rules.local.yaml.
+#
+# The files will be read in the order presented here, so make sure if
+# you have overrides they appear in later files.
+rules_files:
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /home/xzj/01_Project/B_25OS/config/falco/rules
+
+# Whether to watch config file and rules files for modification.
+# When a file is modified, Falco will propagate new config,
+# meaning that the engine will be restarted with the new config.
+watch_config_files: true
+
+# If true, the times displayed in log messages and output messages
+# will be in ISO 8601. By default, times are displayed in the local
+# time zone, as governed by /etc/localtime.
+time_format_iso_8601: false
+
+# Whether to output events in json or text
+json_output: true
+
+# When using json output, whether or not to include the "output" property
+# itself (e.g. "File below a known binary directory opened for writing
+# (user=root ....)") in the json output.
+json_include_output_property: true
+
+# When using json output, whether or not to include the "tags" property
+# itself in the json output. If set to true, outputs caused by rules
+# with no tags will have a "tags" field set to an empty array. If set to
+# false, the "tags" field will not be included in the json output at all.
+json_include_tags_property: true
+
+# Send information logs to stderr and/or syslog Note these are *not* security
+# notification logs! These are just Falco lifecycle (and possibly error) logs.
+log_stderr: true
+log_syslog: true
+
+# Minimum log level to include in logs. Note: these levels are
+# separate from the priority field of rules. This refers only to logs
+# emitted by Falco's internal logging. Can be one of "emergency", "alert",
+# "critical", "error", "warning", "notice", "info", "debug".
+log_level: info
+
+# Minimum rule priority level to load and run. All rules having a
+# priority more severe than this level will be loaded/run.  Can be one
+# of "emergency", "alert", "critical", "error", "warning", "notice",
+# "informational", "debug".
+priority: debug
+
+# Whether or not output to any of the output channels below is
+# buffered.
+buffered_outputs: false
+
+# Falco uses a shared buffer between the kernel and userspace to pass
+# system call information. When Falco detects that this buffer is
+# full and system calls have been dropped, it can take one or more of
+# the following actions:
+#   "ignore": do nothing (default when list of actions is empty)
+#   "log": log a DEBUG message noting that the buffer was full
+#   "alert": emit a Falco alert noting that the buffer was full
+#   "exit": exit Falco with a non-zero return code
+syscall_event_drops:
+  actions:
+    - log
+    - alert
+  rate: 0.03333
+  max_burst: 1
+
+# Falco continuously monitors outputs performance. When an output channel does
+# not allow to deliver an alert within a given deadline, an error is reported
+# indicating which output is blocking notifications.
+# The timeout error will be reported to the log according to the above log_* settings.
+# Note that the notification will not be discarded from the output queue; thus,
+# output channels may indefinitely remain blocked.
+# An output timeout error indeed indicate a misconfiguration issue or I/O problems
+# that cannot be recovered by Falco and should be fixed by the user.
+#
+# The "output_timeout" value specifies the duration in milliseconds to wait before
+# considering the deadline as exceeded.
+#
+# With a 2000ms default, the notification consumer can block the Falco output
+# for up to 2 seconds without reaching the timeout.
+output_timeout: 2000
+
+# A throttling mechanism implemented as a token bucket limits the
+# rate of falco notifications. This throttling is controlled by the following configuration
+# options:
+#  - rate: the number of tokens (i.e. right to send a notification)
+#    gained per second. Defaults to 1.
+#  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+#
+# With these defaults, falco could send up to 1000 notifications after
+# an initial quiet period, and then up to 1 notification per second
+# afterward. It would gain the full burst back after 1000 seconds of
+# no activity.
+# Note: outputs configuration moved to individual output sections
+
+# Where security notifications are sent.
+# Multiple outputs can be enabled.
+
+syslog_output:
+  enabled: false
+
+# If keep_alive is set to true, the file will be opened once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the file will be re-opened
+# for each output message.
+#
+# Also, the file will be closed and reopened if falco is signaled with
+# SIGUSR1.
+file_output:
+  enabled: true
+  keep_alive: true
+  filename: /home/xzj/01_Project/B_25OS/logs/falco_events.log
+
+stdout_output:
+  enabled: false
+
+# Falco contains an embedded webserver that can be used to accept K8s
+# Admission Controller requests. The webserver is enabled by default
+# and listens on port 8765, and can be disabled by setting enabled to false.
+webserver:
+  enabled: false
+  listen_port: 8765
+  k8s_healthz_endpoint: /healthz
+  ssl_enabled: false
+  ssl_certificate: /etc/falco/falco.pem
+
+# Possible additional things you might want to do with program output:
+#   - send to a slack webhook:
+#         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+#   - logging (alternate method than syslog):
+#         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
+program_output:
+  enabled: false
+  keep_alive: false
+  program: "jq '{timestamp: .time, rule: .rule, output: .output, priority: .priority, tags: .tags}' | tee -a /home/xzj/01_Project/B_25OS/logs/falco_structured.log"
+
+http_output:
+  enabled: false
+
+grpc_output:
+  enabled: false
+
+grpc:
+  enabled: false
+  bind_address: "unix:///var/run/falco/falco.sock"
+  # when threadiness is 0, Falco sets it automatically to the number of online cores
+  threadiness: 0
+
+# gRPC server using an HTTP/2 cleartext connection (deprecated)
+# grpc_async configuration has been removed in newer Falco versions
+
+# Container orchestrator metadata fetching params
+metadata_download:
+  max_mb: 100
+  chunk_wait_us: 1000
+  watch_freq_sec: 1
+
+# Logging
+libs_logger:
+  enabled: false
+  severity: debug
+
+# [Experimental] Metrics
+metrics:
+  enabled: false
+  interval: 15m
+  output_rule: true
+  rules_counters_enabled: true
+  resource_utilization_enabled: true
+  state_counters_enabled: true
+  kernel_event_counters_enabled: true
+  libbpf_stats_enabled: true
+  convert_memory_to_mb: true
+  include_empty_values: false
+
+# Syscall event source configuration
+syscall_event_timeouts:
+  max_consecutives: 1000
+
+modern_bpf:
+  cpus_for_each_syscall_buffer: 2
+
+base_syscalls:
+  custom_set: []
+  repair: false
+  all: false
+
+falco_libs:
+  thread_table_size: 262144
+  snaplen: 80
+
+# Use modern eBPF instead of kernel module
+modern_bpf:
+  enabled: true
+
+# Controls the kind of the syscall event source.
+# Can be one of the following values:
+# - syscall-native (default)
+# - syscall-custom
+# - plugin
+syscall_event_source: syscall-native
+
+# Plugin configuration
+load_plugins:
+  - container
+
+plugins:
+  - name: container
+    library_path: libcontainer.so
+    init_config: ""
+    open_params: ""

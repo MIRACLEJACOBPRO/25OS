@@ -1,0 +1,53 @@
+# NeuronOS Security Rules
+# Custom security rules for NeuronOS monitoring
+
+# Lists for NeuronOS specific processes and files
+- list: neuronos_system_processes
+  items: [neuron-daemon, neuron-scheduler, neuron-monitor, neuron-agent]
+
+- list: neuronos_config_files
+  items: [/etc/neuronos/, /opt/neuronos/config/, /var/lib/neuronos/]
+
+- list: neuronos_log_files
+  items: [/var/log/neuronos/, /opt/neuronos/logs/]
+
+# Macros for NeuronOS specific conditions
+- macro: neuronos_process
+  condition: (proc.name in (neuronos_system_processes))
+
+- macro: neuronos_config_access
+  condition: (fd.name startswith "/etc/neuronos/" or fd.name startswith "/opt/neuronos/config/")
+
+- macro: neuronos_log_access
+  condition: (fd.name startswith "/var/log/neuronos/" or fd.name startswith "/opt/neuronos/logs/")
+
+# Rules for NeuronOS security monitoring
+- rule: Unauthorized NeuronOS Config Access
+  desc: Detect unauthorized access to NeuronOS configuration files
+  condition: >
+    open_write and neuronos_config_access and not neuronos_process
+  output: >
+    Unauthorized write to NeuronOS config file
+    (file=%fd.name process=%proc.name user=%user.name command=%proc.cmdline)
+  priority: WARNING
+  tags: [neuronos, config, unauthorized_access]
+
+- rule: NeuronOS Log Tampering
+  desc: Detect attempts to tamper with NeuronOS log files
+  condition: >
+    (open_write or evt.type=unlink) and neuronos_log_access and not neuronos_process
+  output: >
+    Potential NeuronOS log tampering detected
+    (file=%fd.name process=%proc.name user=%user.name command=%proc.cmdline)
+  priority: WARNING
+  tags: [neuronos, logs, tampering]
+
+- rule: Suspicious NeuronOS Process Execution
+  desc: Detect execution of processes with NeuronOS-like names by unauthorized users
+  condition: >
+    (evt.type in (execve, execveat) and evt.dir=<) and proc.name startswith "neuron" and not neuronos_process
+  output: >
+    Suspicious process with NeuronOS-like name executed
+    (process=%proc.name user=%user.name command=%proc.cmdline parent=%proc.pname)
+  priority: WARNING
+  tags: [neuronos, process, suspicious]

@@ -1,0 +1,40 @@
+{
+  "success": true,
+  "total_tests": 6,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "success_rate": 1.0,
+  "test_time": "2025-07-16T17:34:19.986746",
+  "results": [
+    {
+      "test": "openai_integration",
+      "status": "passed",
+      "details": "风险评分: 85.0"
+    },
+    {
+      "test": "decision_agent",
+      "status": "passed",
+      "details": "决策完成但无执行计划"
+    },
+    {
+      "test": "command_executor",
+      "status": "passed",
+      "details": "执行结果数量: 1"
+    },
+    {
+      "test": "effect_validator",
+      "status": "passed",
+      "details": "验证结果: True"
+    },
+    {
+      "test": "full_workflow",
+      "status": "passed",
+      "details": "工作流ID: 8891b653-a77d-40fc-b45d-83bd9a667142, 状态: rolled_back"
+    },
+    {
+      "test": "statistics_monitoring",
+      "status": "passed",
+      "details": "健康状态: healthy"
+    }
+  ]
+}

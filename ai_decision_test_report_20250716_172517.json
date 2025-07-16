@@ -1,0 +1,40 @@
+{
+  "success": false,
+  "total_tests": 6,
+  "passed_tests": 2,
+  "failed_tests": 4,
+  "success_rate": 0.3333333333333333,
+  "test_time": "2025-07-16T17:25:17.269519",
+  "results": [
+    {
+      "test": "openai_integration",
+      "status": "failed",
+      "details": "OpenAIService.analyze_security_events() got an unexpected keyword argument 'events'"
+    },
+    {
+      "test": "decision_agent",
+      "status": "failed",
+      "details": "AnalysisResponse.__init__() missing 6 required positional arguments: 'request_id', 'analysis_type', 'priority', 'timestamp', 'processing_time', and 'token_usage'"
+    },
+    {
+      "test": "command_executor",
+      "status": "failed",
+      "details": "cannot import name 'ExecutionStep' from 'src.backend.services.ai_decision_agent' (/home/xzj/01_Project/B_25OS/src/backend/services/ai_decision_agent.py)"
+    },
+    {
+      "test": "effect_validator",
+      "status": "failed",
+      "details": "type object 'CommandType' has no attribute 'SYSTEM_CHECK'"
+    },
+    {
+      "test": "full_workflow",
+      "status": "passed",
+      "details": "工作流ID: a9cd9a53-90e2-430a-9e0b-5437f15eda14, 状态: rolled_back"
+    },
+    {
+      "test": "statistics_monitoring",
+      "status": "passed",
+      "details": "健康状态: healthy"
+    }
+  ]
+}

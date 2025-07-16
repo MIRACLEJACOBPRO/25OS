@@ -1,0 +1,81 @@
+{
+  "rule_001": {
+    "id": "rule_001",
+    "name": "系统进程白名单",
+    "description": "允许系统关键进程的正常操作",
+    "rule_name": "Terminal shell spawned by untrusted binary",
+    "source_ip": "127.0.0.1",
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_002": {
+    "id": "rule_002",
+    "name": "内网IP白名单",
+    "description": "允许内网IP段的所有活动",
+    "source_ip": "192.168.0.0/16",
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_003": {
+    "id": "rule_003",
+    "name": "Docker容器白名单",
+    "description": "允许Docker容器的正常网络活动",
+    "source_ip": "172.17.0.0/16",
+    "output_pattern": ".*docker.*",
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_004": {
+    "id": "rule_004",
+    "name": "系统更新白名单",
+    "description": "允许系统更新相关的网络连接",
+    "output_pattern": ".*(apt|yum|dnf|update|upgrade).*",
+    "priority": "LOW",
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_005": {
+    "id": "rule_005",
+    "name": "SSH正常连接白名单",
+    "description": "允许来自管理网段的SSH连接",
+    "rule_name": "Inbound SSH connection",
+    "source_ip": "10.0.0.0/8",
+    "time_range": {
+      "start": "2024-01-01T00:00:00",
+      "end": "2025-12-31T23:59:59"
+    },
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_006": {
+    "id": "rule_006",
+    "name": "DNS查询白名单",
+    "description": "允许正常的DNS查询活动",
+    "output_pattern": ".*DNS.*query.*",
+    "priority": "DEBUG",
+    "created_at": "2024-01-01T00:00:00",
+    "enabled": true
+  },
+  "rule_6_1752547127": {
+    "name": "系统进程白名单",
+    "rule_name": "System Process",
+    "process_name": "systemd",
+    "id": "rule_6_1752547127",
+    "created_at": "2025-07-15T10:38:47.903281"
+  },
+  "rule_7_1752547127": {
+    "name": "内网IP白名单",
+    "source_ip": "192.168.1.0/24",
+    "description": "内网IP段白名单",
+    "id": "rule_7_1752547127",
+    "created_at": "2025-07-15T10:38:47.904148"
+  },
+  "rule_8_1752547127": {
+    "name": "SSH连接白名单",
+    "rule_name": "SSH Connection",
+    "source_ip": "192.168.1.100",
+    "target_port": "22",
+    "id": "rule_8_1752547127",
+    "created_at": "2025-07-15T10:38:47.904608"
+  }
+}

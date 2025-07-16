@@ -1,0 +1,433 @@
+# NeuronOS AI决策代理配置文件
+# 定义AI决策代理的行为策略、风险阈值、执行模式等配置
+
+# 基础配置
+basic:
+  # 默认执行模式
+  default_execution_mode: "semi_automatic"  # automatic, semi_automatic, manual, dry_run
+  
+  # 风险阈值配置
+  risk_threshold: 60.0  # 0-100，超过此值需要人工确认
+  
+  # 最大并发执行数
+  max_concurrent_executions: 3
+  
+  # 执行超时时间（秒）
+  execution_timeout: 300
+  
+  # 是否启用回滚功能
+  enable_rollback: true
+  
+  # 是否启用审计日志
+  audit_log_enabled: true
+  
+  # 人工确认超时时间（秒）
+  approval_timeout: 1800  # 30分钟
+
+# 风险等级配置
+risk_levels:
+  very_low:
+    range: [0, 20]
+    auto_execute: true
+    require_approval: false
+    max_execution_time: 60
+  
+  low:
+    range: [21, 40]
+    auto_execute: true
+    require_approval: false
+    max_execution_time: 120
+  
+  medium:
+    range: [41, 60]
+    auto_execute: false
+    require_approval: true
+    max_execution_time: 300
+  
+  high:
+    range: [61, 80]
+    auto_execute: false
+    require_approval: true
+    max_execution_time: 600
+    escalation_required: true
+  
+  very_high:
+    range: [81, 100]
+    auto_execute: false
+    require_approval: true
+    max_execution_time: 900
+    escalation_required: true
+    manual_review_required: true
+
+# 命令白名单配置
+command_whitelist:
+  # 进程管理
+  - action: "kill_process"
+    description: "终止恶意进程"
+    risk_level: 6
+    require_confirmation: true
+    max_execution_time: 10
+  
+  # 服务管理
+  - action: "restart_service"
+    description: "重启受损服务"
+    risk_level: 4
+    require_confirmation: true
+    max_execution_time: 60
+  
+  # 网络安全
+  - action: "block_ip"
+    description: "阻断恶意IP地址"
+    risk_level: 3
+    require_confirmation: false
+    max_execution_time: 5
+  
+  - action: "update_firewall"
+    description: "更新防火墙规则"
+    risk_level: 5
+    require_confirmation: true
+    max_execution_time: 15
+  
+  # 容器管理
+  - action: "isolate_container"
+    description: "隔离受损容器"
+    risk_level: 7
+    require_confirmation: true
+    max_execution_time: 30
+  
+  # 文件操作
+  - action: "backup_file"
+    description: "备份可疑文件"
+    risk_level: 2
+    require_confirmation: false
+    max_execution_time: 30
+  
+  - action: "scan_file"
+    description: "扫描文件恶意软件"
+    risk_level: 1
+    require_confirmation: false
+    max_execution_time: 120
+  
+  # 系统监控
+  - action: "check_system_status"
+    description: "检查系统状态"
+    risk_level: 1
+    require_confirmation: false
+    max_execution_time: 10
+
+# 决策策略配置
+decision_strategies:
+  # 基于风险评分的决策
+  risk_based:
+    enabled: true
+    
+    # 风险评分权重
+    risk_weights:
+      openai_risk_score: 0.4      # OpenAI分析的风险评分
+      confidence_level: 0.2       # 分析置信度
+      affected_systems: 0.2       # 受影响系统数量
+      attack_vectors: 0.1         # 攻击向量数量
+      historical_success: 0.1     # 历史执行成功率
+    
+    # 决策阈值
+    thresholds:
+      immediate_action: 40        # 立即执行阈值
+      manual_approval: 60         # 人工确认阈值
+      escalation: 80              # 升级处理阈值
+  
+  # 基于时间的决策
+  time_based:
+    enabled: true
+    
+    # 时间窗口配置
+    time_windows:
+      business_hours:
+        start: "09:00"
+        end: "18:00"
+        timezone: "Asia/Shanghai"
+        risk_adjustment: -5       # 工作时间降低风险评分
+      
+      off_hours:
+        risk_adjustment: 10       # 非工作时间提高风险评分
+        require_approval: true    # 非工作时间需要确认
+  
+  # 基于系统负载的决策
+  load_based:
+    enabled: true
+    
+    # 系统负载阈值
+    load_thresholds:
+      cpu_usage: 80              # CPU使用率阈值
+      memory_usage: 85           # 内存使用率阈值
+      disk_usage: 90             # 磁盘使用率阈值
+    
+    # 高负载时的策略
+    high_load_strategy:
+      delay_execution: true      # 延迟执行
+      reduce_concurrency: true   # 减少并发数
+      increase_timeout: true     # 增加超时时间
+
+# 执行策略配置
+execution_strategies:
+  # 渐进式执行
+  progressive:
+    enabled: true
+    
+    # 执行阶段
+    phases:
+      - name: "preparation"
+        description: "准备阶段"
+        actions: ["backup_file", "check_system_status"]
+        continue_on_failure: false
+      
+      - name: "isolation"
+        description: "隔离阶段"
+        actions: ["block_ip", "isolate_container"]
+        continue_on_failure: true
+      
+      - name: "remediation"
+        description: "修复阶段"
+        actions: ["kill_process", "restart_service"]
+        continue_on_failure: true
+      
+      - name: "verification"
+        description: "验证阶段"
+        actions: ["scan_file", "check_system_status"]
+        continue_on_failure: false
+  
+  # 并行执行
+  parallel:
+    enabled: true
+    
+    # 可并行执行的命令组
+    parallel_groups:
+      - name: "monitoring"
+        actions: ["check_system_status", "scan_file"]
+        max_concurrency: 3
+      
+      - name: "isolation"
+        actions: ["block_ip", "isolate_container"]
+        max_concurrency: 2
+      
+      - name: "backup"
+        actions: ["backup_file"]
+        max_concurrency: 1
+
+# 回滚策略配置
+rollback_strategies:
+  # 自动回滚条件
+  auto_rollback:
+    enabled: true
+    
+    # 触发条件
+    triggers:
+      - condition: "execution_failure_rate > 50%"
+        description: "执行失败率超过50%"
+      
+      - condition: "validation_failure"
+        description: "效果验证失败"
+      
+      - condition: "system_instability"
+        description: "系统不稳定"
+    
+    # 回滚超时时间
+    rollback_timeout: 120
+  
+  # 手动回滚
+  manual_rollback:
+    enabled: true
+    require_approval: true
+    approval_timeout: 600  # 10分钟
+
+# 通知配置
+notifications:
+  # 决策通知
+  decision_notifications:
+    enabled: true
+    
+    # 通知条件
+    conditions:
+      - "risk_level >= high"
+      - "manual_approval_required"
+      - "execution_failure"
+      - "rollback_triggered"
+    
+    # 通知渠道
+    channels:
+      - type: "email"
+        enabled: true
+        recipients: ["admin@neuronos.com"]
+      
+      - type: "webhook"
+        enabled: true
+        url: "http://localhost:8080/api/notifications/decisions"
+      
+      - type: "log"
+        enabled: true
+        level: "INFO"
+  
+  # 执行通知
+  execution_notifications:
+    enabled: true
+    
+    # 通知事件
+    events:
+      - "execution_started"
+      - "execution_completed"
+      - "execution_failed"
+      - "rollback_completed"
+    
+    # 通知渠道
+    channels:
+      - type: "log"
+        enabled: true
+        level: "INFO"
+
+# 学习和优化配置
+learning:
+  # 决策学习
+  decision_learning:
+    enabled: true
+    
+    # 学习数据收集
+    data_collection:
+      success_rate_tracking: true
+      execution_time_tracking: true
+      user_feedback_collection: true
+    
+    # 模型优化
+    model_optimization:
+      auto_threshold_adjustment: true
+      pattern_recognition: true
+      anomaly_detection: true
+  
+  # 性能优化
+  performance_optimization:
+    enabled: true
+    
+    # 优化策略
+    strategies:
+      command_prioritization: true
+      resource_allocation: true
+      execution_scheduling: true
+
+# 安全配置
+security:
+  # 权限控制
+  access_control:
+    enabled: true
+    
+    # 用户角色
+    roles:
+      - name: "admin"
+        permissions: ["all"]
+      
+      - name: "operator"
+        permissions: ["execute", "approve", "view"]
+      
+      - name: "viewer"
+        permissions: ["view"]
+    
+    # 命令权限
+    command_permissions:
+      high_risk_commands:
+        required_role: "admin"
+        require_dual_approval: true
+      
+      medium_risk_commands:
+        required_role: "operator"
+        require_approval: true
+      
+      low_risk_commands:
+        required_role: "operator"
+        require_approval: false
+  
+  # 审计配置
+  audit:
+    enabled: true
+    
+    # 审计事件
+    events:
+      - "decision_made"
+      - "command_executed"
+      - "approval_granted"
+      - "approval_denied"
+      - "rollback_triggered"
+    
+    # 审计存储
+    storage:
+      type: "database"  # database, file, elasticsearch
+      retention_days: 90
+      encryption_enabled: true
+
+# 监控配置
+monitoring:
+  # 性能监控
+  performance:
+    enabled: true
+    
+    # 监控指标
+    metrics:
+      - "decision_latency"
+      - "execution_success_rate"
+      - "approval_response_time"
+      - "rollback_frequency"
+      - "system_resource_usage"
+    
+    # 告警阈值
+    alerts:
+      decision_latency_threshold: 10  # 秒
+      success_rate_threshold: 90     # 百分比
+      rollback_rate_threshold: 5     # 百分比
+  
+  # 健康检查
+  health_check:
+    enabled: true
+    interval: 60  # 秒
+    
+    # 检查项目
+    checks:
+      - "service_availability"
+      - "database_connectivity"
+      - "external_dependencies"
+      - "resource_availability"
+
+# 集成配置
+integrations:
+  # OpenAI服务集成
+  openai_service:
+    enabled: true
+    endpoint: "http://localhost:8080/api/openai"
+    timeout: 30
+  
+  # 命令执行器集成
+  command_executor:
+    enabled: true
+    endpoint: "http://localhost:8080/api/executor"
+    timeout: 300
+  
+  # 效果验证器集成
+  effect_validator:
+    enabled: true
+    endpoint: "http://localhost:8080/api/validator"
+    timeout: 60
+  
+  # 外部系统集成
+  external_systems:
+    # SIEM系统
+    siem:
+      enabled: false
+      endpoint: "https://siem.company.com/api"
+      api_key: "${SIEM_API_KEY}"
+    
+    # 票务系统
+    ticketing:
+      enabled: false
+      endpoint: "https://tickets.company.com/api"
+      api_key: "${TICKET_API_KEY}"
+    
+    # 通知系统
+    notification:
+      enabled: true
+      endpoint: "http://localhost:8080/api/notifications"
+      timeout: 10

@@ -1,0 +1,126 @@
+# RAG服务Docker Compose配置
+version: '3.8'
+
+services:
+  # RAG服务
+  rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    container_name: rag-service
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config:/app/config
+    depends_on:
+      - redis
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - rag-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx反向代理（可选）
+  nginx:
+    image: nginx:alpine
+    container_name: rag-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - rag-service
+    networks:
+      - rag-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # 监控服务（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rag-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - rag-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana仪表板（可选）
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rag-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - rag-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

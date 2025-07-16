@@ -1,0 +1,46 @@
+{
+  "enabled": true,
+  "max_concurrent_filters": 10,
+  "correlation_window": 300,
+  
+  "priority_filter_enabled": true,
+  "min_priority": "MEDIUM",
+  
+  "frequency_filter_enabled": true,
+  "max_events_per_minute": 100,
+  "frequency_time_window": 60,
+  
+  "ip_whitelist_enabled": true,
+  "whitelist_ips": [
+    "127.0.0.1",
+    "::1",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+  ],
+  
+  "pattern_filter_enabled": true,
+  "block_patterns": [
+    ".*malware.*",
+    ".*virus.*",
+    ".*trojan.*",
+    ".*backdoor.*",
+    ".*exploit.*"
+  ],
+  "allow_patterns": [
+    ".*system update.*",
+    ".*legitimate process.*",
+    ".*authorized access.*"
+  ],
+  
+  "adaptive_filter_enabled": false,
+  "adaptive_learning_window": 1000,
+  
+  "whitelist_file": "/home/xzj/01_Project/B_25OS/config/whitelist_rules.json",
+  
+  "enable_statistics": true,
+  "statistics_interval": 60,
+  
+  "log_level": "INFO",
+  "log_filtered_events": true
+}

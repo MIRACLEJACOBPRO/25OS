@@ -1,0 +1,53 @@
+{
+  "pinecone": {
+    "api_key": "your-pinecone-api-key-here",
+    "environment": "us-east-1-aws",
+    "index_name": "neuronos-knowledge",
+    "dimension": 1024,
+    "metric": "cosine",
+    "cloud": "aws",
+    "region": "us-east-1"
+  },
+  "embedding": {
+    "model": "text-embedding-3-small",
+    "dimension": 1024,
+    "batch_size": 100,
+    "cache_enabled": true,
+    "cache_max_size": 1000,
+    "retry_attempts": 3,
+    "retry_delay": 1.0
+  },
+  "rag": {
+    "default_mode": "enhanced",
+    "default_strategy": "hybrid",
+    "max_knowledge_items": 5,
+    "similarity_threshold": 0.7,
+    "context_window": 4000,
+    "cache_enabled": true,
+    "cache_max_size": 500,
+    "retrieval_timeout": 30.0
+  },
+  "knowledge_management": {
+    "default_validation_level": "moderate",
+    "default_batch_size": 50,
+    "auto_generate_id": true,
+    "overwrite_existing": false,
+    "supported_formats": ["json", "csv", "txt", "markdown"],
+    "max_content_length": 5000,
+    "min_content_length": 10
+  },
+  "performance": {
+    "max_concurrent_embeddings": 10,
+    "max_concurrent_searches": 5,
+    "embedding_timeout": 30.0,
+    "search_timeout": 15.0,
+    "upload_timeout": 60.0
+  },
+  "logging": {
+    "level": "INFO",
+    "log_embeddings": false,
+    "log_searches": true,
+    "log_uploads": true,
+    "performance_logging": true
+  }
+}

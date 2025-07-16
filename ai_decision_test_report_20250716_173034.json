@@ -1,0 +1,40 @@
+{
+  "success": false,
+  "total_tests": 6,
+  "passed_tests": 3,
+  "failed_tests": 3,
+  "success_rate": 0.5,
+  "test_time": "2025-07-16T17:30:34.162930",
+  "results": [
+    {
+      "test": "openai_integration",
+      "status": "passed",
+      "details": "风险评分: 90.0"
+    },
+    {
+      "test": "decision_agent",
+      "status": "failed",
+      "details": "DecisionContext.__init__() got an unexpected keyword argument 'analysis_result'"
+    },
+    {
+      "test": "command_executor",
+      "status": "failed",
+      "details": "'CommandExecutor' object has no attribute 'execute_plan'"
+    },
+    {
+      "test": "effect_validator",
+      "status": "failed",
+      "details": "'EffectValidator' object has no attribute 'validate_execution_effect'"
+    },
+    {
+      "test": "full_workflow",
+      "status": "passed",
+      "details": "工作流ID: f5d0274c-f925-4669-ad27-0b37ae0f34b6, 状态: rolled_back"
+    },
+    {
+      "test": "statistics_monitoring",
+      "status": "passed",
+      "details": "健康状态: healthy"
+    }
+  ]
+}

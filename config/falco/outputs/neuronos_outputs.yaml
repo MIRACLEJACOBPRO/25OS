@@ -1,0 +1,255 @@
+#
+# NeuronOS Custom Falco Outputs Configuration
+# 针对NeuronOS项目的自定义Falco输出配置
+#
+
+# 输出格式配置
+output_format:
+  # JSON格式输出模板
+  json_template: |
+    {
+      "timestamp": "%time",
+      "rule": "%rule",
+      "priority": "%priority",
+      "source": "%source",
+      "tags": %tags,
+      "output_fields": {
+        "user": "%user.name",
+        "process": {
+          "name": "%proc.name",
+          "cmdline": "%proc.cmdline",
+          "pid": "%proc.pid",
+          "ppid": "%proc.ppid",
+          "parent_name": "%proc.pname",
+          "parent_cmdline": "%proc.pcmdline"
+        },
+        "file": {
+          "name": "%fd.name",
+          "type": "%fd.typechar",
+          "directory": "%fd.directory"
+        },
+        "network": {
+          "connection": "%fd.name",
+          "source_ip": "%fd.cip",
+          "source_port": "%fd.cport",
+          "dest_ip": "%fd.sip",
+          "dest_port": "%fd.sport",
+          "protocol": "%fd.l4proto"
+        },
+        "container": {
+          "id": "%container.id",
+          "name": "%container.name",
+          "image": "%container.image.repository",
+          "image_tag": "%container.image.tag"
+        },
+        "system": {
+          "hostname": "%hostname",
+          "kernel_version": "%kernel.version"
+        }
+      },
+      "output": "%output"
+    }
+
+  # 文本格式输出模板
+  text_template: |
+    [%time] %priority %rule: %output
+    User: %user.name | Process: %proc.name(%proc.pid) | Parent: %proc.pname(%proc.ppid)
+    Command: %proc.cmdline
+    File: %fd.name | Network: %fd.name
+    Container: %container.name (%container.id)
+    Tags: %tags
+
+# 日志轮转配置
+log_rotation:
+  # 启用日志轮转
+  enabled: true
+  # 最大文件大小 (2GB)
+  max_size: "2G"
+  # 最大保存时间 (1小时)
+  max_age: "1h"
+  # 最大文件数量
+  max_files: 24
+  # 启用压缩
+  compress: true
+  # 压缩级别 (1-9)
+  compression_level: 6
+
+# 采样配置
+sampling:
+  # 默认采样率 (100%)
+  default_rate: 1.0
+  # 高频事件采样率 (10%)
+  high_volume_rate: 0.1
+  # 关键事件采样率 (100%)
+  critical_rate: 1.0
+  # 启用自适应采样
+  adaptive: true
+  # 采样规则
+  rules:
+    - priority: "EMERGENCY"
+      rate: 1.0
+    - priority: "ALERT"
+      rate: 1.0
+    - priority: "CRITICAL"
+      rate: 1.0
+    - priority: "ERROR"
+      rate: 0.8
+    - priority: "WARNING"
+      rate: 0.5
+    - priority: "NOTICE"
+      rate: 0.3
+    - priority: "INFORMATIONAL"
+      rate: 0.1
+    - priority: "DEBUG"
+      rate: 0.05
+
+# 过滤配置
+filtering:
+  # 白名单进程
+  whitelist_processes:
+    - "systemd"
+    - "kthreadd"
+    - "ksoftirqd"
+    - "migration"
+    - "rcu_"
+    - "watchdog"
+    - "dbus"
+    - "NetworkManager"
+    - "chronyd"
+    - "sshd"
+  
+  # 白名单用户
+  whitelist_users:
+    - "root"
+    - "daemon"
+    - "bin"
+    - "sys"
+    - "sync"
+    - "games"
+    - "man"
+    - "lp"
+    - "mail"
+    - "news"
+    - "uucp"
+    - "proxy"
+    - "www-data"
+    - "backup"
+    - "list"
+    - "irc"
+    - "gnats"
+    - "nobody"
+    - "systemd-network"
+    - "systemd-resolve"
+    - "messagebus"
+    - "systemd-timesync"
+    - "syslog"
+  
+  # 白名单文件路径
+  whitelist_paths:
+    - "/tmp/"
+    - "/var/tmp/"
+    - "/var/log/"
+    - "/var/cache/"
+    - "/home/xzj/.cache/"
+    - "/home/xzj/.local/"
+  
+  # 黑名单关键词
+  blacklist_keywords:
+    - "password"
+    - "passwd"
+    - "secret"
+    - "key"
+    - "token"
+    - "credential"
+
+# 输出目标配置
+output_targets:
+  # 文件输出
+  file:
+    enabled: true
+    path: "/home/xzj/01_Project/B_25OS/logs/falco_events.log"
+    format: "json"
+    keep_alive: true
+    
+  # 结构化日志输出
+  structured_file:
+    enabled: true
+    path: "/home/xzj/01_Project/B_25OS/logs/falco_structured.log"
+    format: "json"
+    keep_alive: true
+    
+  # 系统日志输出
+  syslog:
+    enabled: false
+    facility: "LOG_LOCAL0"
+    
+  # 标准输出
+  stdout:
+    enabled: false
+    format: "text"
+    
+  # HTTP输出 (用于后续集成)
+  http:
+    enabled: false
+    url: "http://localhost:8080/api/v1/events"
+    method: "POST"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer <token>"
+    timeout: 5000
+    retry_count: 3
+    
+  # gRPC输出 (用于后续集成)
+  grpc:
+    enabled: false
+    address: "localhost:5060"
+    tls: false
+    
+# 性能配置
+performance:
+  # 缓冲区大小
+  buffer_size: 8192
+  # 批处理大小
+  batch_size: 100
+  # 刷新间隔 (毫秒)
+  flush_interval: 1000
+  # 最大队列长度
+  max_queue_length: 10000
+  # 丢弃策略: "drop_oldest" 或 "drop_newest"
+  drop_policy: "drop_oldest"
+
+# 监控配置
+monitoring:
+  # 启用性能监控
+  enabled: true
+  # 监控间隔 (秒)
+  interval: 60
+  # 监控指标
+  metrics:
+    - "events_processed"
+    - "events_dropped"
+    - "queue_length"
+    - "processing_time"
+    - "memory_usage"
+    - "cpu_usage"
+  # 监控输出文件
+  output_file: "/home/xzj/01_Project/B_25OS/logs/falco_metrics.log"
+
+# 告警配置
+alerting:
+  # 启用告警
+  enabled: true
+  # 告警阈值
+  thresholds:
+    # 事件丢失率阈值 (百分比)
+    drop_rate: 5.0
+    # 队列长度阈值
+    queue_length: 8000
+    # 处理延迟阈值 (毫秒)
+    processing_delay: 5000
+    # 内存使用阈值 (MB)
+    memory_usage: 1024
+  # 告警输出
+  output:
+    file: "/home/xzj/01_Project/B_25OS/logs/falco_alerts.log"
+    format: "json"
